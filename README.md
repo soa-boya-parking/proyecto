@@ -3,7 +3,7 @@
 ### Integrantes
 
 - Ezequiel Laurenti - 39245012
-- Hector Rojas Stoll -
+- Hector Rojas Stoll - 94448064
 - Juan Jose Tocino - 38617339
 - Damian Vinci - 30603450
 
