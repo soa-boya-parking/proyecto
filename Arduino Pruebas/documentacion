@@ -1,0 +1,38 @@
+DataSheet
+https://cdn.sparkfun.com/datasheets/Wireless/WiFi/ESP32ThingV1.pdf
+
+I2C vs SPI
+https://www.lifewire.com/selecting-between-i2c-and-spi-819003
+
+Colores
+Rojo y Naranja son 3.3v
+Negro y Gris son masa
+
+Temperatura:
+https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
+https://programarfacil.com/blog/arduino-blog/ds18b20-sensor-temperatura-arduino/
+Instalar librerias (mediante Arduino IDE)
+OneWire 2.3.4
+DS18B20 3.8.0
+
+Agua:
+https://www.luisllamas.es/arduino-lluvia/
+https://randomnerdtutorials.com/guide-for-rain-sensor-fc-37-or-yl-83-with-arduino/
+
+Color:
+http://www.esp32learning.com/code/esp32-and-tcs34725-color-sensor.php
+Instalar librerias (mediante Arduino IDE)
+TCS34725
+
+Acelerometro
+SCL(AMARILLO) PIN22
+SDA(AZUL) PIN21
+https://www.luisllamas.es/arduino-acelerometro-adxl345/
+Instalar librerias (mediante Arduino IDE)
+ADXL345 SparkFun
+Adafruit sensor unified 1.0.3
+
+Pantalla:
+https://www.instructables.com/id/Esp32-5110-LCD-Interfacing-and-Digital-Clock/
+https://www.espruino.com/PCD8544
+https://lastminuteengineers.com/nokia-5110-lcd-arduino-tutorial/
