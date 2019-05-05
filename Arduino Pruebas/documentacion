@@ -1,3 +1,25 @@
+#ELECTROVALVULA
+No existen o no se consiguen al menos en los alrededores, electroválvulas de 5V.
+De conseguirse deberían consumir una enorme cantidad de mAh, lo mas cercano son electrovalvulas de 12V
+con la desventaja de ya necesitar un transformador 220V - 12V.
+Se probó el funcionamiento de una electroválvulo de lavarropa 220V y da el resultado esperado.
+El pasaje de un líquido de un extremo hacia el otro.
+En vista de las pruebas, una solución viable es conseguir una bomba de agua a 3V.
+
+#PRUEBAS CON SERVO SG90
+El servo trabaja con tensiones cercanas a los 5V, se probó con:
+Salida 3.3v y tiene un funcionamiento raro, por momentos anda, por otros no, y cae la tensión a menos de 3v.
+Salida 5v externa transformador 220V, funciona perfecto, la desventaja es el transformador.
+En vista de las pruebas, una solución viable es conseguir el Dm-s0090d que trabaja a 3.6v
+
+#TAMANO DEL SKETCH
+En el arduino IDE seleccionar Herramientas -> Partition Scheme -> Cualquier opción menos default.
+Esto se debe a que por defecto el Arduino Ide permite máximo 1MB en ESP32.
+Pero cualquier versión de ESP32 posee al menos 4MB, el módulo de Sparkfun posee 4MB en particular.
+Esto es necesario ya que al interactuar con las librerías relacionadas a WIFI, HTTP y Bluetooth se llega a 1.1MB (Sketch)
+Las opciones sin OTA o con OTA reducido, dan entre 2 a 3MB, de necesitar mas se deben tocar las particiones.
+
+#DATOS TECNICOS SOBRE LIBRERIAS, SENSORES, ESTANDAR DE COLORES Y DEMAS.
 DataSheet
 https://cdn.sparkfun.com/datasheets/Wireless/WiFi/ESP32ThingV1.pdf
 
