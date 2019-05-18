@@ -26,16 +26,18 @@ static PCD8544 lcd=PCD8544(14,13,27,26,15);
 
 //Colorimetro
 #include "Adafruit_TCS34725.h"
+#include "ColorConverterLib.h"
 
 //C
 #include "stdlib.h"
 #include "string.h"
 
 //Constantes para mensajes Bluetooth
-#define ORDEN_CLORO = 1;
-#define ORDEN_MOTOR = 2;
-#define ORDEN_WIFI = 3;
-#define ORDEN_GPS = 4;
+int const ORDEN_CLORO = 1;
+int const ORDEN_MOTOR = 2;
+int const ORDEN_WIFI = 3;
+int const ORDEN_GPS = 4;
+
 
 //-------CONFIGURACIONES GLOBALES
 
@@ -63,6 +65,7 @@ const int PINAGUA = 36;
 double temperatura;
 int x, y, z;
 uint16_t r, g, b, c, colorTemp, lux;
+char nombreColor[13];
 int valorSensorAgua;
 
 //Constructor del acelerometro.
@@ -97,17 +100,21 @@ int xyz;
 
 void tratarMensajeRecibidoBluetooth(const char* msg)
 {
-  switch((int)msg[0])
+  int const comando = msg[0] - '0';
+  Serial.println(comando);
+  Serial.println(ORDEN_CLORO);
+  if(comando == ORDEN_CLORO)
   {
-    case 1:;
-      char orden[5]; // EJ: 1;OFF - 1;ON
-      strcpy(orden, &msg[2]);
-      strcpy(l6, orden);
-      Serial.println(orden);
-      break;
-    default:
-      break;
+    Serial.println(msg);
+    strcpy(l6, &msg[2]);
+  } else if(comando == ORDEN_MOTOR){
+    Serial.println(msg);
+  } else if(comando == ORDEN_WIFI){
+    Serial.println(msg);
+  } else if(comando == ORDEN_GPS){
+    Serial.println(msg);
   }
+  
 }
 
 //Clase para el envío de datos por bluetooth.
@@ -131,26 +138,25 @@ class Cliente: public BLECharacteristicCallbacks
     {
       //El valor a recibir es un string, si mando otro valor que no sea string aparece raro.
       std::string rxValue = pCharacteristic->getValue();
-      //Utilizo un vector de C que es "mas" facil de manejar que un vector de C++
-      char rxValueC[50] = "";
 
       if (rxValue.length() > 0) 
       {
         Serial.print("Valor recibido: ");
-        for (int i = 0; i < rxValue.length(); i++)
-          strcat(rxValueC, &rxValue[i]);
-         strcat(rxValueC, "\0");
-         tratarMensajeRecibidoBluetooth(rxValueC);
+        const char* valor = rxValue.c_str();
+        tratarMensajeRecibidoBluetooth(valor);
       }
     }
 };
 
+void configurarWifi(char* )
+{
+  
+  //WiFi.begin(ssid, password);
+}
+
 //Inicializaciones.
 void setup() 
 {
-  //-------INICIALIZACION DE WIFI.
-  WiFi.begin(ssid, password);
-  
   //-------INICIALIZACION DE PANTALLA.
   gpio_set_direction(GPIO_NUM_23, GPIO_MODE_OUTPUT);
   gpio_set_level(GPIO_NUM_23, 1);
@@ -190,12 +196,48 @@ void setup()
   pServer->getAdvertising()->start();
   Serial.println("Esperando la conexion de un cliente.");
 
+  adaptacionColor(r, g, b, c);
+  
   //Asignacion de la tarea para el core 1.
   xTaskCreatePinnedToCore(Task1Core1, "Task1", 10000, NULL, 1, &Task1, 0);     
 
   //Asignacion de la tarea para el core 1.
   xTaskCreatePinnedToCore(Task2Core1, "Task2", 10000, NULL, 1, &Task2, 0);  
   delay(2000); // Para observar los ON.
+}
+
+//https://www.luisllamas.es/arduino-sensor-color-rgb-tcs34725/
+void adaptacionColor(uint16_t red, uint16_t green, uint16_t blue, uint16_t c)
+{
+  uint32_t sum = c;
+  float r, g, b;
+  r = red; r /= sum;
+  g = green; g /= sum;
+  b = blue; b /= sum;
+ 
+  // Escalar rgb a bytes
+  r *= 256; g *= 256; b *= 256;
+
+  double hue, saturation, value;
+  ColorConverter::RgbToHsv(static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b), hue, saturation, value);
+  hue*=360;
+  if (hue < 15)
+    strcpy(nombreColor, "Rojo");
+  else if (hue < 45)
+    strcpy(nombreColor, "Naranja");
+  else if (hue < 90)
+    strcpy(nombreColor, "Amarillo");
+  else if (hue < 150)
+    strcpy(nombreColor, "Verde");
+  else if (hue < 210)
+    strcpy(nombreColor, "Cyan");
+  else if (hue < 270)
+    strcpy(nombreColor, "Azul");
+  else if (hue < 330)
+    strcpy(nombreColor, "Magenta");
+  else
+    strcpy(nombreColor, "Rojo");
+  //Serial.println(hue);
 }
 
 //Esta funcion actualiza la informacion de los sensores, y la envia a las variables de pantalla.
@@ -217,10 +259,14 @@ void getSensores()
     strcat(acelmsg, xx); strcat(acelmsg, " Y:"); strcat(acelmsg, yy); strcat(acelmsg, " Z:"); strcat(acelmsg, zz); 
     strcpy(l2, acelmsg);
 
+
     //Obtencion de la informacion del colorimetro, adaptacion y envio hacia las variables de pantalla.
     tcs.getRawData(&r, &g, &b, &c);
     colorTemp = tcs.calculateColorTemperature(r, g, b);
     lux = tcs.calculateLux(r, g, b);
+
+    adaptacionColor(r, g, b, c);
+    
     //Variables que contendran todo el mensaje.
     char ctemp[21] = "Color Temp: "; 
     char luxx[11] = "Lux: "; 
@@ -229,7 +275,7 @@ void getSensores()
     char a1[9]; char a2[9]; char a3[9]; char a4[9]; char a5[9];
     itoa(colorTemp, a1, 10); itoa(lux, a2, 10); itoa(r, a3, 10); itoa(g, a4, 10); itoa(b, a5, 10);
     strcat(ctemp, a1); strcat(ctemp, " K"); strcat(luxx, a2); strcat(rr, a3); strcat(gg, a4); strcat(bb, a5);
-    strcpy(l3, ctemp); strcpy(l4, luxx); strcat(rr, gg); strcat(rr, bb); strcpy(l5, rr);
+    strcpy(l3, ctemp); strcpy(l4, luxx); strcat(rr, gg); strcat(rr, bb); /*strcpy(l5, rr);*/ strcpy(l5, nombreColor);
 
     //Obtencion de la informacion del aguametro (?)
     valorSensorAgua = analogRead(PINAGUA);
