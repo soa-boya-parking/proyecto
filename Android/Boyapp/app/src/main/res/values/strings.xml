@@ -1,5 +1,10 @@
 <resources>
     <string name="app_name">BoyApp</string>
-    <string name="tab_text_1">Estado</string>
-    <string name="tab_text_2">Configuración</string>
+    <string name="tab_estado_titulo">Estado</string>
+    <string name="tab_config_titulo">Configuración</string>
+    <string name="tab_estado_temp_label">Tempratura:</string>
+    <string name="tab_estado_color_label">Color:</string>
+    <string name="tab_estado_cerrar_label">Cerrar pileta:</string>
+    <string name="tab_estado_abrir_label">Cerrar pileta:</string>
+    <string name="tab_config_notif_caida_label">Notificar caídas:</string>
 </resources>
