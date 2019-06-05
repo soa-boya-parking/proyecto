@@ -7,4 +7,7 @@
     <string name="tab_estado_cerrar_label">Cerrar pileta:</string>
     <string name="tab_estado_abrir_label">Cerrar pileta:</string>
     <string name="tab_config_notif_caida_label">Notificar caídas:</string>
+    <string name="tab_config_btn_buscar">Buscar dispositivos</string>
+    <string name="title_activity_device_list">DeviceListActivity</string>
+    <string name="title_activity_comunicacion">ComunicacionActivity</string>
 </resources>
