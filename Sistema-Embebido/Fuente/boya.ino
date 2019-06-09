@@ -37,6 +37,7 @@ int const ORDEN_CLORO = 1;
 int const ORDEN_MOTOR = 2;
 int const ORDEN_WIFI = 3;
 int const ORDEN_GPS = 4;
+int const ORDEN_GPSAUTO = 5;
 
 
 //-------CONFIGURACIONES GLOBALES
@@ -96,13 +97,25 @@ char datosBluetooth[51] = "";
 //Deteccion movimiento beta jaja.
 int xyz;
 
-//Tratamiento de los mensajes recibidos por Bluetooth.
+void separarPorPuntoYComa(char datos[][30], const char* msg)
+{
+    int i = 0;
+    char *pt;
+    pt = strtok((char*)msg,";");
+    while (pt != NULL) 
+    {
+        strcpy(datos[i], pt);
+        pt = strtok (NULL, ";");
+        i++;
+    }
+}
 
+//Tratamiento de los mensajes recibidos por Bluetooth.
 void tratarMensajeRecibidoBluetooth(const char* msg)
 {
   int const comando = msg[0] - '0';
-  Serial.println(comando);
-  Serial.println(ORDEN_CLORO);
+  char datos[5][30];
+  separarPorPuntoYComa(datos, msg); // Al recibir datos EJ: 1;xxxx;xxxxxxx;xxxxxx.
   if(comando == ORDEN_CLORO)
   {
     Serial.println(msg);
@@ -113,6 +126,10 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
     Serial.println(msg);
   } else if(comando == ORDEN_GPS){
     Serial.println(msg);
+  } else if (comando == ORDEN_GPSAUTO){
+    WiFi.begin(datos[1], datos[2]);
+    Serial.println("Wifi conectado");
+    //Ver esto https://opencagedata.com/ para pasar de latitud longitud a texto.
   }
   
 }
@@ -141,18 +158,12 @@ class Cliente: public BLECharacteristicCallbacks
 
       if (rxValue.length() > 0) 
       {
-        Serial.print("Valor recibido: ");
+        //Serial.print("Valor recibido: ");
         const char* valor = rxValue.c_str();
         tratarMensajeRecibidoBluetooth(valor);
       }
     }
 };
-
-void configurarWifi(char* )
-{
-  
-  //WiFi.begin(ssid, password);
-}
 
 //Inicializaciones.
 void setup() 
