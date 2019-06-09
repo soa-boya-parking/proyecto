@@ -29,19 +29,40 @@ public protocol BLEDelegate
 
 class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate
 {
-    
     public var delegate: BLEDelegate?
     
-    private var centralManager : CBCentralManager!
-    private var esp32 : CBPeripheral!
-    private var characteristics = [String : CBCharacteristic]() // Es una variable tipo diccionario.
+    public var centralManager : CBCentralManager!
+    public var esp32 : CBPeripheral!
+    public var characteristics = [String : CBCharacteristic]() // Es una variable tipo diccionario.
+    
+    public static var esp32Shared : CBPeripheral!
+    public static var characteristicsShared = [String : CBCharacteristic]()
     
     var characteristicASCIIValue = NSString()
-
+    
+    //Elementos de la vista.
     @IBOutlet var cloroSelect: UISegmentedControl!
     @IBOutlet var cerrarSelect: UISegmentedControl!
     @IBOutlet var temperaturaLabel: UILabel!
     @IBOutlet var opacidadLabel: UILabel!
+    
+    //Acciones sobre elementos de la vista.
+    @IBAction func dispensarCloroAction(_ sender: Any)
+    {
+        var estado = "1;OFF";
+        if(cloroSelect.selectedSegmentIndex == 0)
+        {
+            estado = "1;ON";
+        }
+        let data: Data = estado.data(using: String.Encoding.utf8)!
+        //Array(characteristics)[1].value el Tx esta almacenado en un diccionario, casteo a un array, y es la segunda posicion.
+        self.esp32.writeValue(data, for: Array(characteristics)[0].value, type: CBCharacteristicWriteType.withResponse)
+    }
+    
+    @IBAction func cerrarPiletaAction(_ sender: Any)
+    {
+        
+    }
     
     //Esta funcion es invocada cuando el dispositivo es conectado, es decir pasa a estado 2.
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral)
@@ -81,11 +102,12 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
         
         for characteristic in service.characteristics!
         {
-            characteristics[characteristic.uuid.uuidString] = characteristic
+            self.characteristics[characteristic.uuid.uuidString] = characteristic
         }
         
         //Cuando descubro las caracteristicas del dispositivo a la vez activo las notificaciones. Es decir lo que me manda el ESP32.
         enableNotifications(enable: true)
+        FirstViewController.characteristicsShared = self.characteristics
     }
     
     //Funcion que determina como se van a realizar la lectura de datos provenientes del ESP32.
@@ -112,8 +134,8 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
             let cadenaBytetoString = String(bytes: recibido, encoding: .utf8)
             //print(cadenaBytetoString!)
             let datosCorrectos = cadenaBytetoString!.components(separatedBy: ";")
-            temperaturaLabel.text = datosCorrectos[0] + "°C"
-            opacidadLabel.text = datosCorrectos[1]
+            self.temperaturaLabel.text = datosCorrectos[0] + "°C"
+            self.opacidadLabel.text = datosCorrectos[1]
             if(datosCorrectos[3].contains("ALERTA"))
             {
                 let alertController = UIAlertController(title: "Resultado", message:
@@ -139,7 +161,7 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
         {
             print("Bluetooth activado")
             //Escaneo los dispositivos.
-            centralManager.scanForPeripherals(withServices: nil, options: nil)
+            self.centralManager.scanForPeripherals(withServices: nil, options: nil)
         }
         else
         {
@@ -150,9 +172,9 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
     override func viewDidLoad()
     {
         super.viewDidLoad()
-        cloroSelect.selectedSegmentIndex = 1
-        cerrarSelect.selectedSegmentIndex = 1
-        centralManager = CBCentralManager(delegate: self, queue: nil)
+        self.cloroSelect.selectedSegmentIndex = 1
+        self.cerrarSelect.selectedSegmentIndex = 1
+        self.centralManager = CBCentralManager(delegate: self, queue: nil)
     }
     
     //Esta funcion es invocada cuando se escanean los dispositivos.
@@ -168,13 +190,15 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
                 print("Data : \(ad)")
             }
             //Mantengo una referencia FUERTE al dispositivo.
-            esp32 = peripheral
+            self.esp32 = peripheral
             //Detengo la busqueda.
-            centralManager.stopScan()
+            self.centralManager.stopScan()
             //Seteo el delegado.
-            esp32.delegate = self
+            self.esp32.delegate = self
             //Empiezo la conexion, debe estar tambien el centralManager.connect de arriba.
-            centralManager.connect(esp32, options: nil)
+            self.centralManager.connect(esp32, options: nil)
+            
+            FirstViewController.esp32Shared = self.esp32
         }
     }
 
