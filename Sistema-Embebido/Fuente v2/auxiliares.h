@@ -19,7 +19,7 @@ void coordenadasATexto(const char* lat, const char* longg)
         ciudad.replace(",", "");
         ciudad.replace('"', '*');
         ciudad.replace("*", "");
-        Serial.println(ciudad); //SEGUIR. EL NOMBRE DE LA CIUDAD IRIA A http://api.apixu.com/v1/current.json?key=35a01956527c4df5941170247190906&q=Buenos%20Aires
+        Serial.println(ciudad); //SEGUIR. EL NOMBRE DE LA CIUDAD IRIA A http://api.apixu.com/v1/current.json?key=35a01956527c4df5941170247190906&q=Buenos%20Aires0
       }
  
     else 
@@ -61,4 +61,22 @@ void actualizarPantalla()
   mostrar(0, 3, l4);
   mostrar(0, 4, l5);
   mostrar(0, 5, l6);
+}
+
+void servoDerecha()
+{
+  for (pos = 0; pos <= 180; pos += 1) 
+  {
+    servo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(5);                       // waits 15ms for the servo to reach the position
+  }
+}
+
+void servoIzquierda()
+{
+  for (pos = 180; pos >= 0; pos -= 1) 
+  {
+    servo.write(pos);
+    delay(5);
+  }
 }

@@ -28,6 +28,9 @@ static PCD8544 lcd=PCD8544(14,13,27,26,15);
 #include "Adafruit_TCS34725.h"
 #include "ColorConverterLib.h"
 
+//Servo
+#include <Servo.h>
+
 //C
 #include "stdlib.h"
 #include "string.h"
@@ -62,6 +65,13 @@ uint8_t txValue = 0;
 //Pines de sensores analogicos.
 const int PINTEMPERATURA = 32;
 const int PINAGUA = 36;
+
+//Pin del relee (electrovalvula).
+const int PINRELE = 23;
+
+//Servo
+Servo servo;
+int pos = 0;
 
 //-------VARIABLES GLOBALES SENSORES
 double temperatura;

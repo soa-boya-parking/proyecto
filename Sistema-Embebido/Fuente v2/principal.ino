@@ -8,10 +8,11 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
   separarPorPuntoYComa(datos, msg); // Al recibir datos EJ: 1;xxxx;xxxxxxx;xxxxxx.
   if(comando == ORDEN_CLORO)
   {
-    Serial.println(msg);
-    strcpy(l6, &msg[2]);
+    Serial.println("ENTER CLORO");
+    (strcmp(datos[1], "ON") == 0) ? digitalWrite(PINRELE, HIGH) : digitalWrite(PINRELE, LOW);
   } else if(comando == ORDEN_MOTOR){
-    Serial.println(msg);
+    Serial.println("ENTER SERVO");
+    (strcmp(datos[1], "ON") == 0) ? servoDerecha() : servoIzquierda();
   } else if(comando == ORDEN_WIFI){
     Serial.println(msg);
   } else if(comando == ORDEN_GPS){
@@ -79,6 +80,12 @@ void setup()
   //-------INICIALIZACION DE ACELEROMETRO.
   adxl.powerOn();            
   adxl.setRangeSetting(16);
+
+  //-------INICIALIZACION DE SERVO.
+  servo.attach(25);
+
+  //-------INICIALIZACION DE RELEE
+  pinMode(PINRELE, OUTPUT);
 
   mostrar(0, 2, "ADXL345 ON");
 
