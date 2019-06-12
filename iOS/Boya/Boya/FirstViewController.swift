@@ -61,7 +61,14 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
     
     @IBAction func cerrarPiletaAction(_ sender: Any)
     {
-        
+        var estado = "2;OFF";
+        if(cloroSelect.selectedSegmentIndex == 0)
+        {
+            estado = "2;ON";
+        }
+        let data: Data = estado.data(using: String.Encoding.utf8)!
+        //Array(characteristics)[1].value el Tx esta almacenado en un diccionario, casteo a un array, y es la segunda posicion.
+        self.esp32.writeValue(data, for: Array(characteristics)[0].value, type: CBCharacteristicWriteType.withResponse)
     }
     
     //Esta funcion es invocada cuando el dispositivo es conectado, es decir pasa a estado 2.
