@@ -57,7 +57,7 @@
         app:layout_constraintTop_toTopOf="@+id/labelColorTextView" />
 
     <Switch
-        android:id="@+id/switch1"
+        android:id="@+id/cerrarSwitch"
         android:layout_width="138dp"
         android:layout_height="21dp"
         android:layout_marginStart="8dp"

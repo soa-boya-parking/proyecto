@@ -9,6 +9,8 @@ import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
@@ -52,6 +54,8 @@ public class EstadoFragment extends Fragment {
 
     private TextView nroTempraturaTextView;
     private TextView valorColorTextView;
+    private Switch cerrarSwitch;
+    private boolean estaCerrado = true;
 
     public static EstadoFragment newInstance(int index) {
         EstadoFragment fragment = new EstadoFragment();
@@ -87,6 +91,21 @@ public class EstadoFragment extends Fragment {
         View root = inflater.inflate(R.layout.estado_fragment, container, false);
         nroTempraturaTextView = root.findViewById(R.id.nroTempraturatextView);
         valorColorTextView = root.findViewById(R.id.valorColorTextView);
+        cerrarSwitch = root.findViewById(R.id.cerrarSwitch);
+        cerrarSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (mConnectedThread == null){
+                    mConnectedThread = new ConnectedThread(btSocket);
+                    mConnectedThread.start();
+                }
+                if (isChecked){
+                    estaCerrado = true;
+                    mConnectedThread.write("1;ON");
+                } else {
+                    mConnectedThread.write("1;OFF");
+                }
+            }
+        });
         estadoViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
