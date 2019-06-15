@@ -60,7 +60,7 @@ uint8_t txValue = 0;
 
 //Pines de sensores analogicos.
 const int PINTEMPERATURA = 32;
-const int PINAGUA = 36;
+const int PINAGUA = 25;
 
 //-------VARIABLES GLOBALES SENSORES
 double temperatura;
@@ -262,13 +262,15 @@ void getSensores()
     strcat(tempmsg, tempchar);
     strcat(tempmsg, " °C");
     strcpy(l1, tempmsg);
-
+    Serial.println(tempmsg);
+    
     //Obtencion de la informacion del acelerometro, adaptacion y envio hacia las variables de pantalla.
     char xx[5]; char yy[5]; char zz[5]; char acelmsg[20] = "X:";
     adxl.readAccel(&x, &y, &z);
     itoa(x, xx, 10); itoa(y, yy, 10); itoa(z, zz, 10);
     strcat(acelmsg, xx); strcat(acelmsg, " Y:"); strcat(acelmsg, yy); strcat(acelmsg, " Z:"); strcat(acelmsg, zz); 
     strcpy(l2, acelmsg);
+    Serial.println(acelmsg);
 
 
     //Obtencion de la informacion del colorimetro, adaptacion y envio hacia las variables de pantalla.
@@ -287,14 +289,18 @@ void getSensores()
     itoa(colorTemp, a1, 10); itoa(lux, a2, 10); itoa(r, a3, 10); itoa(g, a4, 10); itoa(b, a5, 10);
     strcat(ctemp, a1); strcat(ctemp, " K"); strcat(luxx, a2); strcat(rr, a3); strcat(gg, a4); strcat(bb, a5);
     strcpy(l3, ctemp); strcpy(l4, luxx); strcat(rr, gg); strcat(rr, bb); /*strcpy(l5, rr);*/ strcpy(l5, nombreColor);
-
+    Serial.println(ctemp);
+    Serial.println(luxx);
+    
+    
     //Obtencion de la informacion del aguametro (?)
     valorSensorAgua = analogRead(PINAGUA);
     char agua[11] = "Agua: "; char a6[7];
     itoa(valorSensorAgua, a6, 10);
     strcat(agua, a6);
     //strcpy(l6, agua);
-
+    Serial.println(agua);
+    
     //Envio de los datos por Bluetooth.
     strcpy(datosBluetooth, tempchar);
     strcat(datosBluetooth, ";");
