@@ -45,6 +45,8 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
     @IBOutlet var cerrarSelect: UISegmentedControl!
     @IBOutlet var temperaturaLabel: UILabel!
     @IBOutlet var opacidadLabel: UILabel!
+    @IBOutlet var ColorLabel: UILabel!
+    @IBOutlet var LluviaLabel: UILabel!
     
     //Acciones sobre elementos de la vista.
     @IBAction func dispensarCloroAction(_ sender: Any)
@@ -143,6 +145,7 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
             let datosCorrectos = cadenaBytetoString!.components(separatedBy: ";")
             self.temperaturaLabel.text = datosCorrectos[0] + "°C"
             self.opacidadLabel.text = datosCorrectos[1]
+            self.LluviaLabel.text = datosCorrectos[2]
             if(datosCorrectos[3].contains("ALERTA"))
             {
                 let alertController = UIAlertController(title: "Resultado", message:
@@ -151,6 +154,7 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
                 
                 self.present(alertController, animated: true, completion: nil)
             }
+            self.ColorLabel.text = datosCorrectos[4]
         }
     }
     
