@@ -64,7 +64,7 @@ uint8_t txValue = 0;
 
 //Pines de sensores analogicos.
 const int PINTEMPERATURA = 32;
-const int PINAGUA = 36;
+const int PINAGUA = 35;
 
 //Pin del relee (electrovalvula).
 const int PINRELE = 23;
@@ -82,6 +82,7 @@ int valorSensorAgua;
 
 //Constructor del acelerometro.
 ADXL345 adxl = ADXL345();
+const int SENSIBILIDAD_ACELEROMETRO = 10;
 
 //Tareas, concepto similar a Thread, el ESP32 tiene 2 nucleos, por lo tanto puedo tener threads en mas de un nucleo.
 TaskHandle_t Task1;
@@ -109,3 +110,5 @@ char datosBluetooth[51] = "";
 int xyz;
 
 #include "auxiliares.h"
+#include "sensores.h"
+#include "bluetooth.h"

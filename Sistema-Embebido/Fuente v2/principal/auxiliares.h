@@ -1,9 +1,10 @@
+//Si queda tiempo ver esta opcion.
 void coordenadasATexto(const char* lat, const char* longg)
 {
   if(WiFi.status()== WL_CONNECTED)
   {
     HTTPClient http;
-    char base[] = "https://api.opencagedata.com/geocode/v1/json?key=6b6a6897b5ad4a56a6d47f16d4908577&q=-34.61315+-58.37723";
+    char base[] = "https://api.opencagedata.com/geocode/v1/json?key=6b6a6897b5ad4a56a6d47f16d4908577&q=";
     strcat(base, lat);
     strcat(base, "+");
     strcat(base, longg);
@@ -78,5 +79,35 @@ void servoIzquierda()
   {
     servo.write(pos);
     delay(5);
+  }
+}
+
+//Simula una llamada a una API del clima que devuelve en base a coordenadas, el nombre de la localizacion y si esta lloviendo o no.
+void obtenerClima()
+{
+  if(WiFi.status()== WL_CONNECTED)
+  {
+    HTTPClient http;
+    char base[] = "http://191.238.213.18/obtenerClima.php?password=asd1234";
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    http.begin(base); 
+    int httpResponseCode = http.GET();
+    if (httpResponseCode > 0) 
+    {
+        String payload = http.getString(); //Todo el string que recibo.
+        char datos[3][30]; //Variable auxiliar.
+        char aux[100]; // Esta variable auxiliar es porque el request trabaja con un String C++ y el metodo separarPorPuntoYComa con un char*
+        payload.toCharArray(aux, 99);
+        separarPorPuntoYComa(datos, aux);
+        strcpy(l5, datos[0]); // Exhibo la ubicacion por pantalla.
+        strcpy(l6, datos[1]); // Exhibo el clima por pantalla.
+        if(strcmp(datos[1], "Lluvia") == 0) //Si la llamada a la API del clima detecta lluvia.
+          servoDerecha(); //Activo el servo para cerrar la pileta (lona).
+    }
+    else 
+    {
+      Serial.println(http.errorToString(httpResponseCode));
+    }
+    http.end(); //Free the resources
   }
 }

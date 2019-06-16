@@ -1,62 +1,5 @@
 #include "parametros.h"
 
-//Tratamiento de los mensajes recibidos por Bluetooth.
-void tratarMensajeRecibidoBluetooth(const char* msg)
-{
-  int const comando = msg[0] - '0';
-  char datos[5][30];
-  separarPorPuntoYComa(datos, msg); // Al recibir datos EJ: 1;xxxx;xxxxxxx;xxxxxx.
-  if(comando == ORDEN_CLORO)
-  {
-    Serial.println("ENTER CLORO");
-    (strcmp(datos[1], "ON") == 0) ? digitalWrite(PINRELE, HIGH) : digitalWrite(PINRELE, LOW);
-  } else if(comando == ORDEN_MOTOR){
-    Serial.println("ENTER SERVO");
-    (strcmp(datos[1], "ON") == 0) ? servoDerecha() : servoIzquierda();
-  } else if(comando == ORDEN_WIFI){
-    Serial.println(msg);
-  } else if(comando == ORDEN_GPS){
-    Serial.println(msg);
-  } else if (comando == ORDEN_WIFIGPSCOORD){
-    WiFi.begin(datos[1], datos[2]);
-    while (WiFi.status() != WL_CONNECTED) 
-    {delay(500);Serial.println("Connecting to WiFi..");}
-    coordenadasATexto(datos[3], datos[4]);
-  }
-  
-}
-
-//Clase para el envío de datos por bluetooth.
-class Servidor: public BLEServerCallbacks 
-{
-    void onConnect(BLEServer* pServer) 
-    {
-      deviceConnected = true;
-    };
-
-    void onDisconnect(BLEServer* pServer) 
-    {
-      deviceConnected = false;
-    }
-};
-
-//Clase para la recepción de datos por bluetooth.
-class Cliente: public BLECharacteristicCallbacks 
-{
-    void onWrite(BLECharacteristic *pCharacteristic) 
-    {
-      //El valor a recibir es un string, si mando otro valor que no sea string aparece raro.
-      std::string rxValue = pCharacteristic->getValue();
-
-      if (rxValue.length() > 0) 
-      {
-        //Serial.print("Valor recibido: ");
-        const char* valor = rxValue.c_str();
-        tratarMensajeRecibidoBluetooth(valor);
-      }
-    }
-};
-
 //Inicializaciones.
 void setup() 
 {
@@ -65,6 +8,7 @@ void setup()
   gpio_set_level(GPIO_NUM_23, 1);
   lcd.begin(84, 48);
   lcd.clear();
+  lcd.setContrast(50);
   
   //Velocidad puerto serial.
   Serial.begin(115200);
@@ -82,10 +26,14 @@ void setup()
   adxl.setRangeSetting(16);
 
   //-------INICIALIZACION DE SERVO.
-  servo.attach(25);
+  servo.attach(17);
+
+  //-------INICIALIZACION DEL SENSOR DE AGUA.
+  pinMode(PINAGUA, INPUT);
 
   //-------INICIALIZACION DE RELEE
   pinMode(PINRELE, OUTPUT);
+  digitalWrite(PINRELE, LOW);
 
   mostrar(0, 2, "ADXL345 ON");
 
@@ -111,42 +59,10 @@ void setup()
   xTaskCreatePinnedToCore(Task1Core1, "Task1", 10000, NULL, 1, &Task1, 0);     
 
   //Asignacion de la tarea para el core 1.
-  xTaskCreatePinnedToCore(Task2Core1, "Task2", 10000, NULL, 1, &Task2, 0);  
+  xTaskCreatePinnedToCore(Task2Core1, "Task2", 5000, NULL, 1, &Task2, 0);  
+
+  strcpy(l1, "Boya-Parking");
   delay(2000); // Para observar los ON.
-}
-
-//https://www.luisllamas.es/arduino-sensor-color-rgb-tcs34725/
-void adaptacionColor(uint16_t red, uint16_t green, uint16_t blue, uint16_t c)
-{
-  uint32_t sum = c;
-  float r, g, b;
-  r = red; r /= sum;
-  g = green; g /= sum;
-  b = blue; b /= sum;
- 
-  // Escalar rgb a bytes
-  r *= 256; g *= 256; b *= 256;
-
-  double hue, saturation, value;
-  ColorConverter::RgbToHsv(static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b), hue, saturation, value);
-  hue*=360;
-  if (hue < 15)
-    strcpy(nombreColor, "Rojo");
-  else if (hue < 45)
-    strcpy(nombreColor, "Naranja");
-  else if (hue < 90)
-    strcpy(nombreColor, "Amarillo");
-  else if (hue < 150)
-    strcpy(nombreColor, "Verde");
-  else if (hue < 210)
-    strcpy(nombreColor, "Cyan");
-  else if (hue < 270)
-    strcpy(nombreColor, "Azul");
-  else if (hue < 330)
-    strcpy(nombreColor, "Magenta");
-  else
-    strcpy(nombreColor, "Rojo");
-  //Serial.println(hue);
 }
 
 //Esta funcion actualiza la informacion de los sensores, y la envia a las variables de pantalla.
@@ -159,72 +75,83 @@ void getSensores()
     dtostrf(temperatura, 6, 2, tempchar);
     strcat(tempmsg, tempchar);
     strcat(tempmsg, " °C");
-    strcpy(l1, tempmsg);
+    strcpy(l2, tempmsg);
+    
 
     //Obtencion de la informacion del acelerometro, adaptacion y envio hacia las variables de pantalla.
     char xx[5]; char yy[5]; char zz[5]; char acelmsg[20] = "X:";
     adxl.readAccel(&x, &y, &z);
-    itoa(x, xx, 10); itoa(y, yy, 10); itoa(z, zz, 10);
+    /*itoa(x, xx, 10); itoa(y, yy, 10); itoa(z, zz, 10);
     strcat(acelmsg, xx); strcat(acelmsg, " Y:"); strcat(acelmsg, yy); strcat(acelmsg, " Z:"); strcat(acelmsg, zz); 
-    strcpy(l2, acelmsg);
+    strcpy(l2, acelmsg);*/
 
 
     //Obtencion de la informacion del colorimetro, adaptacion y envio hacia las variables de pantalla.
     tcs.getRawData(&r, &g, &b, &c);
     colorTemp = tcs.calculateColorTemperature(r, g, b);
     lux = tcs.calculateLux(r, g, b);
-
+    int suciedad = corroborarSuciedad(colorTemp, lux);
+    if(suciedad == LIMPIA)
+      strcpy(l3, "Estado: Limpia");
+    else if(suciedad == ALGOSUCIA)
+      strcpy(l3, "Estado: Normal"); //No me alcanzan los caracteres en la pantalla para algo sucia
+      
+    else if(suciedad == SUCIA)
+      strcpy(l3, "Estado: Sucia");
+      
+  
     adaptacionColor(r, g, b, c);
     
     //Variables que contendran todo el mensaje.
-    char ctemp[21] = "Color Temp: "; 
+    /*char ctemp[21] = "Color Temp: "; 
     char luxx[11] = "Lux: "; 
     char rr[21] = "R:"; char gg[11] = " G:"; char bb[11]=" B:";
     //Variables aux para el itoa.
     char a1[9]; char a2[9]; char a3[9]; char a4[9]; char a5[9];
     itoa(colorTemp, a1, 10); itoa(lux, a2, 10); itoa(r, a3, 10); itoa(g, a4, 10); itoa(b, a5, 10);
     strcat(ctemp, a1); strcat(ctemp, " K"); strcat(luxx, a2); strcat(rr, a3); strcat(gg, a4); strcat(bb, a5);
-    strcpy(l3, ctemp); strcpy(l4, luxx); strcat(rr, gg); strcat(rr, bb); /*strcpy(l5, rr);*/ strcpy(l5, nombreColor);
+    strcpy(l3, ctemp); strcpy(l4, luxx); strcat(rr, gg); strcat(rr, bb); /*strcpy(l5, rr); strcpy(l5, nombreColor);*/
 
     //Obtencion de la informacion del aguametro (?)
     valorSensorAgua = analogRead(PINAGUA);
     char agua[11] = "Agua: "; char a6[7];
-    itoa(valorSensorAgua, a6, 10);
+    if(valorSensorAgua > 4000)
+      strcpy(l4, "Seco");
+    else if(valorSensorAgua > 2500)
+      strcpy(l4, "Llovizna");
+    else
+      strcpy(l4, "Lluvia");
+    /*itoa(valorSensorAgua, a6, 10);
     strcat(agua, a6);
-    //strcpy(l6, agua);
+    strcpy(l6, agua);*/
 
-    //Envio de los datos por Bluetooth.
+    //Preparacion de los datos por Bluetooth. (NO ENVIO)
     strcpy(datosBluetooth, tempchar);
     strcat(datosBluetooth, ";");
-    (lux>8) ? strcat(datosBluetooth, "Sucia") : strcat(datosBluetooth, "Limpia");
+    
+    if(suciedad == LIMPIA)
+      strcat(datosBluetooth, "Limpia");
+    else if(suciedad == ALGOSUCIA)
+      strcat(datosBluetooth, "Algo Sucia");
+    else if(suciedad == SUCIA)
+      strcat(datosBluetooth, "Sucia");
+      
     strcat(datosBluetooth, ";");
-    strcat(datosBluetooth, a6);
+    
+    if(valorSensorAgua > 4000)
+      strcat(datosBluetooth, "Seco");
+    else if(valorSensorAgua > 2500)
+      strcat(datosBluetooth, "Llovizna");
+    else
+      strcat(datosBluetooth, "Lluvia");
+    
     strcat(datosBluetooth, ";");
-    (abs(x+y+z) - abs(xyz) > 5) ? strcat(datosBluetooth, "ALERTA") : strcat(datosBluetooth, "NADA");
+    
+    (abs(x+y+z) - abs(xyz) > SENSIBILIDAD_ACELEROMETRO) ? strcat(datosBluetooth, "ALERTA") : strcat(datosBluetooth, "NADA");
+    strcat(datosBluetooth, ";");
+    strcat(datosBluetooth, nombreColor);
     strcat(datosBluetooth, ";");
     xyz = x+y+z;
-}
-
-//Esta funcion envia los datos por Bluetooth hacia el celular.
-void enviarDatosBluetooth()
-{
-   //Aca tengo que definir cada CUANTO TIEMPO le envio CIERTOS DATOS al dispositivo conectado.
-    //Si el dispositivo esta conectado.
-    if (deviceConnected) 
-    {
-        //Serial.println("Dispositivo conectado"); Como se repite cada 10 segundos spamea la pantalla.
-        pTxCharacteristic->setValue((unsigned char*)datosBluetooth, sizeof(datosBluetooth));
-        pTxCharacteristic->notify(); // Se lo mando.
-    }
-
-    //Si el dispositivo se desconecta.
-    if (!deviceConnected && oldDeviceConnected) 
-    {
-        pServer->startAdvertising(); // restart advertising
-        Serial.println("Dispositivo desconectado");
-        oldDeviceConnected = deviceConnected;
-    }
-    if (deviceConnected && !oldDeviceConnected) {oldDeviceConnected = deviceConnected;}
 }
 
 void enviarDatosWifi()
@@ -281,7 +208,7 @@ void Task1Core1(void* pvParameters)
   momentoDoInicio = xTaskGetTickCount();
   for(;;)
   {
-    vTaskDelayUntil(&momentoDoInicio,pdMS_TO_TICKS(1));
+    vTaskDelayUntil(&momentoDoInicio,pdMS_TO_TICKS(10));
     getSensores();
   }
       
