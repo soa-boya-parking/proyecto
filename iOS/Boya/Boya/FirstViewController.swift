@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreBluetooth
+import CoreMotion
 import Foundation
 
 //Estos valores estan definidos en el ESP32.
@@ -39,6 +40,8 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
     public static var characteristicsShared = [String : CBCharacteristic]()
     
     var characteristicASCIIValue = NSString()
+    
+    let motionManager = CMMotionManager()
     
     //Elementos de la vista.
     @IBOutlet var cloroSelect: UISegmentedControl!
@@ -186,6 +189,7 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
         self.cloroSelect.selectedSegmentIndex = 1
         self.cerrarSelect.selectedSegmentIndex = 1
         self.centralManager = CBCentralManager(delegate: self, queue: nil)
+        self.startAccelerometers()
     }
     
     //Esta funcion es invocada cuando se escanean los dispositivos.
@@ -210,6 +214,38 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
             self.centralManager.connect(esp32, options: nil)
             
             FirstViewController.esp32Shared = self.esp32
+        }
+    }
+    
+    //Esta funcion administra el sensor del acelerometro, al girar el celular a la izquierda o hacia la derecha se envia la orden de cerrar o abrir la pileta.
+    func startAccelerometers()
+    {
+        var antiguoX = 0.5
+        if motionManager.isAccelerometerAvailable
+        {
+            motionManager.accelerometerUpdateInterval = 1.5
+            motionManager.startAccelerometerUpdates(to: OperationQueue.main)
+            { (data, error) in
+                let actualX = data!.acceleration.x
+                if(abs(actualX-antiguoX) > 0.75)
+                {
+                    if(antiguoX > actualX)
+                    {
+                        let estado = "2;ON";
+                        let data: Data = estado.data(using: String.Encoding.utf8)!
+                        //self.esp32.writeValue(data, for: Array(characteristics)[0].value, type: CBCharacteristicWriteType.withResponse)
+                        self.cloroSelect.selectedSegmentIndex = 0
+                    }
+                    else
+                    {
+                        let estado = "2;OFF";
+                        let data: Data = estado.data(using: String.Encoding.utf8)!
+                        //self.esp32.writeValue(data, for: Array(characteristics)[0].value, type: CBCharacteristicWriteType.withResponse)
+                        self.cloroSelect.selectedSegmentIndex = 1
+                    }
+                }
+                antiguoX = actualX
+            }
         }
     }
 
