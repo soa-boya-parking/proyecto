@@ -29,7 +29,6 @@ void adaptacionColor(uint16_t red, uint16_t green, uint16_t blue, uint16_t c)
     strcpy(nombreColor, "Magenta");
   else
     strcpy(nombreColor, "Rojo");
-  //Serial.println(hue);
 }
 
 const int LIMPIA = 1;

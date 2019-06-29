@@ -24,24 +24,28 @@ void setup()
   //-------INICIALIZACION DE ACELEROMETRO.
   adxl.powerOn();            
   adxl.setRangeSetting(16);
+  mostrar(0, 2, "ADXL345 ON");
 
-  //-------INICIALIZACION DE SERVO.
-  servo.attach(17);
+  //-------INICIALIZACION DE LOS PINES DEL PUENTE H(MOTOR).
+  pinMode(BIA, OUTPUT);
+  pinMode(BIB, OUTPUT);
+  mostrar(0, 3, "Puente H ON");
 
-  //-------INICIALIZACION DEL SENSOR DE AGUA.
+  //-------INICIALIZACION DE LOS PINES DEL SENSOR DE AGUA.
   pinMode(PINAGUA, INPUT);
+  mostrar(0, 4, "FC-37 ON");
 
-  //-------INICIALIZACION DE RELEE
+  //-------INICIALIZACION DE LOS PINES DEL RELEE.
   pinMode(PINRELE, OUTPUT);
   digitalWrite(PINRELE, LOW);
-
-  mostrar(0, 2, "ADXL345 ON");
+  mostrar(0, 5, "Valvula ON");
+  
 
   //-------INICIALIZACION DEL BLUETOOTH.
   // Inicializacion del BLE con nombre.
   BLEDevice::init("ESP32");
 
-  // Creacion del servidor.
+  // Creacion del servidor BLE.
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new Servidor());
   BLEService *pService = pServer->createService(SERVICE_UUID);
@@ -51,23 +55,27 @@ void setup()
   pRxCharacteristic->setCallbacks(new Cliente());
   pService->start();
   pServer->getAdvertising()->start();
-  Serial.println("Esperando la conexion de un cliente.");
+  mostrar(0, 5, "Bluetooth ON");
 
   adaptacionColor(r, g, b, c);
   
-  //Asignacion de la tarea para el core 1.
+  //Asignacion de la tarea para el core 1. Recoleccion de datos de sensores.
   xTaskCreatePinnedToCore(Task1Core1, "Task1", 10000, NULL, 1, &Task1, 0);     
 
-  //Asignacion de la tarea para el core 1.
-  xTaskCreatePinnedToCore(Task2Core1, "Task2", 5000, NULL, 1, &Task2, 0);  
+  //Asignacion de la tarea para el core 2. Entradas y salidas pantalla, bluetooth, wifi.
+  xTaskCreatePinnedToCore(Task2Core1, "Task2", 5000, NULL, 1, &Task2, 1);  
 
+  //La primera linea de la pantalla es el nombre del proyecto.
   strcpy(l1, "Boya-Parking");
-  delay(2000); // Para observar los ON.
+  //Delay de cinco segundos para mostra los mensajes de inicializacion.
+  delay(5000);
 }
 
 //Esta funcion actualiza la informacion de los sensores, y la envia a las variables de pantalla.
 void getSensores()
 {
+    //TEMPERATURA
+    
     //Obtencion de la informacion del termometro, adaptacion y envio hacia las variables de pantalla.
     tempSensor.requestTemperatures();
     char tempchar[9]; char tempmsg[20] = "Temp: ";
@@ -77,32 +85,35 @@ void getSensores()
     strcat(tempmsg, " °C");
     strcpy(l2, tempmsg);
     
-
+    //ACELEROMETRO
+    
     //Obtencion de la informacion del acelerometro, adaptacion y envio hacia las variables de pantalla.
     char xx[5]; char yy[5]; char zz[5]; char acelmsg[20] = "X:";
     adxl.readAccel(&x, &y, &z);
+
+    //ANTIGUA SALIDA POR PANTALLA DE LOS VALORES CRUDOS DEL ACELEROMETRO.
     /*itoa(x, xx, 10); itoa(y, yy, 10); itoa(z, zz, 10);
     strcat(acelmsg, xx); strcat(acelmsg, " Y:"); strcat(acelmsg, yy); strcat(acelmsg, " Z:"); strcat(acelmsg, zz); 
     strcpy(l2, acelmsg);*/
 
+    //COLORIMETRO
 
     //Obtencion de la informacion del colorimetro, adaptacion y envio hacia las variables de pantalla.
     tcs.getRawData(&r, &g, &b, &c);
+    //Se calcula el colorTemp y lux en base a los parametros anteriores r, g, b.
     colorTemp = tcs.calculateColorTemperature(r, g, b);
     lux = tcs.calculateLux(r, g, b);
+    //Se calcula la suciedad mediante pruebas caseras realizadas, teniendo en cuenta el colorTemp y lux.
     int suciedad = corroborarSuciedad(colorTemp, lux);
     if(suciedad == LIMPIA)
       strcpy(l3, "Estado: Limpia");
     else if(suciedad == ALGOSUCIA)
-      strcpy(l3, "Estado: Normal"); //No me alcanzan los caracteres en la pantalla para algo sucia
-      
+      strcpy(l3, "Estado: Normal"); //No alcanzan los caracteres en la pantalla para algo sucia
     else if(suciedad == SUCIA)
-      strcpy(l3, "Estado: Sucia");
-      
-  
+      strcpy(l3, "Estado: Sucia");  
     adaptacionColor(r, g, b, c);
     
-    //Variables que contendran todo el mensaje.
+    //ANTIGUA SALIDA POR PANTALLA DE LOS VALORES CRUDOS DEL COLORIMETRO.
     /*char ctemp[21] = "Color Temp: "; 
     char luxx[11] = "Lux: "; 
     char rr[21] = "R:"; char gg[11] = " G:"; char bb[11]=" B:";
@@ -112,7 +123,9 @@ void getSensores()
     strcat(ctemp, a1); strcat(ctemp, " K"); strcat(luxx, a2); strcat(rr, a3); strcat(gg, a4); strcat(bb, a5);
     strcpy(l3, ctemp); strcpy(l4, luxx); strcat(rr, gg); strcat(rr, bb); /*strcpy(l5, rr); strcpy(l5, nombreColor);*/
 
-    //Obtencion de la informacion del aguametro (?)
+    //SENSOR AGUA
+
+    //Obtencion de la informacion del sensor de agua.
     valorSensorAgua = analogRead(PINAGUA);
     char agua[11] = "Agua: "; char a6[7];
     if(valorSensorAgua > 4000)
@@ -121,9 +134,13 @@ void getSensores()
       strcpy(l4, "Llovizna");
     else
       strcpy(l4, "Lluvia");
+    
+    //ANTIGUA SALIDA POR PANTALLA DE LOS VALORES CRUDOS DEL SENSOR DE AGUA.
     /*itoa(valorSensorAgua, a6, 10);
     strcat(agua, a6);
     strcpy(l6, agua);*/
+
+    //BLUETOOTH PREPARACION
 
     //Preparacion de los datos por Bluetooth. (NO ENVIO)
     strcpy(datosBluetooth, tempchar);
@@ -154,6 +171,7 @@ void getSensores()
     xyz = x+y+z;
 }
 
+//Funcion no usada, se pensaba para tener un log en una base de datos almacenando los valores de los sensores.
 void enviarDatosWifi()
 {
   char request[120] = "";
@@ -208,22 +226,25 @@ void Task1Core1(void* pvParameters)
   momentoDoInicio = xTaskGetTickCount();
   for(;;)
   {
-    vTaskDelayUntil(&momentoDoInicio,pdMS_TO_TICKS(10));
+    //1 TICK = 1 CICLO. Pasa de 1 milisegundo expresado a ciclos, ya que la funcion recibe la cantidad de ciclos por la cual permanece bloqueado.
+    vTaskDelayUntil(&momentoDoInicio,pdMS_TO_TICKS(1));
     getSensores();
   }
       
 }
 
-//Thread2-Core1
+//Thread2-Core2
 void Task2Core1(void* pvParameters)
 {
   TickType_t momentoDoInicio;
   momentoDoInicio = xTaskGetTickCount();
   for (;;)
   {
-      vTaskDelayUntil(&momentoDoInicio,pdMS_TO_TICKS(10));
+      vTaskDelayUntil(&momentoDoInicio,pdMS_TO_TICKS(1000));
       actualizarPantalla();
       enviarDatosBluetooth();
+      actualizarHora();
+      cuandoDispensarCloro();
       //enviarDatosWifi();
   }
 }

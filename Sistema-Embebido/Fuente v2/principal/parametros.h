@@ -22,26 +22,41 @@
 //Pantalla
 #include "PCD8544.h"
 #include "driver/gpio.h"
-static PCD8544 lcd=PCD8544(14,13,27,26,15);
+static PCD8544 lcd = PCD8544(14,13,27,26,15);
 
 //Colorimetro
 #include "Adafruit_TCS34725.h"
 #include "ColorConverterLib.h"
 
-//Servo
-#include <Servo.h>
+//Motor - Puente H
+#include <analogWrite.h>
+const int BIA = 0;
+const int BIB = 4;
+byte speed = 255;
 
 //C
 #include "stdlib.h"
 #include "string.h"
 
+//RELOJ
+int relojActivado = 0;
+unsigned long horaenSegundos = 0;
+int segundosActuales = 0;
+int minutosActuales = 0;
+int horasActuales = 0;
+//Por defecto a las 23:59:59 si no especifican.
+int segundosProgramadosDispensarCloro = 23;
+int minutosProgramadosDispensarCloro = 59;
+int horasProgramadosDispensarCloro = 59;
+int capacidadPileta = 0;
+
 //Constantes para mensajes Bluetooth
 int const ORDEN_CLORO = 1;
 int const ORDEN_MOTOR = 2;
-int const ORDEN_WIFI = 3;
-int const ORDEN_GPS = 4;
+int const ORDEN_WIFIGPS = 3;
 int const ORDEN_WIFIGPSCOORD = 5;
-int const ORDEN_WIFIGPS = 6;
+int const ORDEN_WIFIGPSCOORDRELOJ = 7;
+int const ORDEN_PROGRAMARCLORO = 9;
 
 
 //-------CONFIGURACIONES GLOBALES
@@ -68,10 +83,6 @@ const int PINAGUA = 35;
 
 //Pin del relee (electrovalvula).
 const int PINRELE = 23;
-
-//Servo
-Servo servo;
-int pos = 0;
 
 //-------VARIABLES GLOBALES SENSORES
 double temperatura;

@@ -1,3 +1,5 @@
+#include "timerC.h"
+
 //Si queda tiempo ver esta opcion.
 void coordenadasATexto(const char* lat, const char* longg)
 {
@@ -64,21 +66,70 @@ void actualizarPantalla()
   mostrar(0, 5, l6);
 }
 
-void servoDerecha()
+//Detencion del motor.
+void stopMotor()
 {
-  for (pos = 0; pos <= 180; pos += 1) 
+  analogWrite(BIA, 0);
+  analogWrite(BIB, 0);
+}
+
+//Sentido de rotacion del motor. Sentido de Cierre de Techo de Pileta.
+void backward()
+{
+  analogWrite(BIA, 0);
+  analogWrite(BIB, speed);
+  delay(5000); //ESTE DELAY ESTA CORRIENDO SOBRE EL THREAD2-NUCLEO2 QUE SIRVE DE ENTRADAS/SALIDAS NO SOBRE EL THREAD1-NUCLEO1 DE MEDICION DE SALIDAS.
+  stopMotor();
+}
+
+//Sentido de rotacion del motor. Sentido de Apertura de Techo de Pileta.
+void forward()
+{
+  analogWrite(BIA, speed);
+  analogWrite(BIB, 0);
+  delay(5000); //ESTE DELAY ESTA CORRIENDO SOBRE EL THREAD2-NUCLEO2 QUE SIRVE DE ENTRADAS/SALIDAS NO SOBRE EL THREAD1-NUCLEO1 DE MEDICION DE SALIDAS.
+  stopMotor();
+}
+
+//Esta funcion corre sobre el thread 2 (nucleo 2) que se ejecuta cada 1 segundo y actualiza la hora siempre y cuando se haya seteado via bluetooth una hora inicial.
+void actualizarHora()
+{
+  //Si el reloj fue previamente activado por Bluetooth.
+  if(relojActivado == 1)
   {
-    servo.write(pos);              // tell servo to go to position in variable 'pos'
-    delay(5);                       // waits 15ms for the servo to reach the position
+    horaenSegundos += 1;
+    __secs_to_tm(horaenSegundos, &horasActuales, &minutosActuales, &segundosActuales);
+    char horas[3], minutos[3], segundos[3];
+    itoa(horasActuales, horas, 10); itoa(minutosActuales, minutos, 10); itoa(segundosActuales, segundos, 10);
+    strcpy(l5, horas); strcat(l5, ":"); strcat(l5, minutos); strcat(l5, ":"); strcat(l5, segundos);
   }
 }
 
-void servoIzquierda()
+//Esta funcion activa el relee de la electrovalvula un determinado tiempo a una hora especificada por el usuario.
+void cuandoDispensarCloro()
 {
-  for (pos = 180; pos >= 0; pos -= 1) 
+  //Por cada litro que tenga la pileta se anade un segundo de dispensado de cloro que equivale a 0,0016L
+  int deltaPorCapacidad = capacidadPileta * 1000;
+  if(segundosProgramadosDispensarCloro == segundosActuales && minutosProgramadosDispensarCloro == minutosActuales && horasProgramadosDispensarCloro == horasActuales)
   {
-    servo.write(pos);
-    delay(5);
+    if(temperatura > 0 && temperatura < 15)
+    {
+      digitalWrite(PINRELE, HIGH);
+      delay(500 + deltaPorCapacidad);
+      digitalWrite(PINRELE, LOW);
+    }
+    else if (temperatura > 15 && temperatura < 20)
+    {
+      digitalWrite(PINRELE, HIGH);
+      delay(1000 + deltaPorCapacidad);
+      digitalWrite(PINRELE, LOW);
+    }
+    else if (temperatura > 20)
+    {
+      digitalWrite(PINRELE, HIGH);
+      delay(1500 + deltaPorCapacidad);
+      digitalWrite(PINRELE, LOW);
+    }
   }
 }
 
@@ -99,10 +150,10 @@ void obtenerClima()
         char aux[100]; // Esta variable auxiliar es porque el request trabaja con un String C++ y el metodo separarPorPuntoYComa con un char*
         payload.toCharArray(aux, 99);
         separarPorPuntoYComa(datos, aux);
-        strcpy(l5, datos[0]); // Exhibo la ubicacion por pantalla.
-        strcpy(l6, datos[1]); // Exhibo el clima por pantalla.
+        strcpy(l6, datos[0]); // Exhibo la ubicacion por pantalla.
+        strcat(l6, datos[1]); // Exhibo el clima por pantalla.
         if(strcmp(datos[1], "Lluvia") == 0) //Si la llamada a la API del clima detecta lluvia.
-          servoDerecha(); //Activo el servo para cerrar la pileta (lona).
+          backward(); //Activo el servo para cerrar la pileta (techo).
     }
     else 
     {
