@@ -7,9 +7,10 @@
 //
 
 import UIKit
-import CoreBluetooth
-import CoreMotion
+import CoreBluetooth // Para el bluetooth.
+import CoreMotion // Para el sensor de movimiento.
 import Foundation
+import AVFoundation // Para el audio.
 
 //Estos valores estan definidos en el ESP32.
 let kBLEService_UUID = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -36,11 +37,13 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
     public var esp32 : CBPeripheral!
     public var characteristics = [String : CBCharacteristic]() // Es una variable tipo diccionario.
     
+    //Variables estaticas que son compartidas con la vista Secundaria (De configuracion)
     public static var esp32Shared : CBPeripheral!
     public static var characteristicsShared = [String : CBCharacteristic]()
     
     var characteristicASCIIValue = NSString()
     
+    //Manager de Movimiento, agrupa varios sensores de la categoria movimiento.
     let motionManager = CMMotionManager()
     
     //Elementos de la vista.
@@ -50,8 +53,21 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
     @IBOutlet var opacidadLabel: UILabel!
     @IBOutlet var ColorLabel: UILabel!
     @IBOutlet var LluviaLabel: UILabel!
+    @IBOutlet var HoraInput: UITextField!
+    @IBOutlet var capacidadInput: UITextField!
     
-    //Acciones sobre elementos de la vista.
+    //Action de programar hora.
+    @IBAction func guardarHoraAction(_ sender: Any)
+    {
+        var hora = "9;"
+        hora += HoraInput.text!.replacingOccurrences(of: ":", with: ";")
+        hora+=";"
+        hora+=capacidadInput.text!
+        let data: Data = hora.data(using: String.Encoding.utf8)!
+        self.esp32.writeValue(data, for: Array(characteristics)[0].value, type: CBCharacteristicWriteType.withResponse)
+    }
+    
+    //Action de dispensar cloro.
     @IBAction func dispensarCloroAction(_ sender: Any)
     {
         var estado = "1;OFF";
@@ -64,6 +80,7 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
         self.esp32.writeValue(data, for: Array(characteristics)[0].value, type: CBCharacteristicWriteType.withResponse)
     }
     
+    //Action de cerrar pileta.
     @IBAction func cerrarPiletaAction(_ sender: Any)
     {
         var estado = "2;OFF";
@@ -182,13 +199,46 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
             print("Bluetooth desactivado")
         }
     }
+
+    //Funcion formato objetiveC que es lanzada cuando el sensor de proximidad cambia su valor.
+    @objc func proximityChanged(_ notification: Notification) {
+        if let device = notification.object as? UIDevice
+        {
+            if(UIDevice.current.proximityState == true)
+            {
+                print("Tapado")
+                AudioServicesPlayAlertSound(SystemSoundID(1322))
+            }
+            else
+            {
+                print("Libre`")
+                AudioServicesPlayAlertSound(SystemSoundID(1000))
+            }
+        }
+    }
     
+    //Esta funcion es llamada cuando la vista es cargada.
     override func viewDidLoad()
     {
+        //Activar el sensor de proximidad.
+        UIDevice.current.isProximityMonitoringEnabled = true
+        //Imprimo el estado del sensor de proximidad.
+        print("enabled: \(UIDevice.current.isProximityMonitoringEnabled)")
+        //Anado un observer al estado del sensor de actividad, que se activa cuando cambia el estado y lanza una funcion.
+        NotificationCenter.default.addObserver(self, selector: #selector(self.proximityChanged), name: UIDevice.proximityStateDidChangeNotification, object: UIDevice.current)
+        // Adaptación de la pantalla al mostrar ú ocultar el teclado.
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
         super.viewDidLoad()
+        
+        self.setupHideKeyboardOnTap()
+        
+        //Se define que por defecto los botones empiezan en OFF.
         self.cloroSelect.selectedSegmentIndex = 1
         self.cerrarSelect.selectedSegmentIndex = 1
+        //Se inicia el manager que controla el bluetooth.
         self.centralManager = CBCentralManager(delegate: self, queue: nil)
+        //Se empieza a recibir datos provenientes del acelerometro.
         self.startAccelerometers()
     }
     
@@ -198,6 +248,7 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
         //Si encontre el ESP32.
         if(peripheral.name == "ESP32")
         {
+            //Print de debug.
             print("\nNombre : \(peripheral.name ?? "(No name)")")
             print("Señal(RSSI) : \(RSSI)")
             for ad in advertisementData
@@ -220,32 +271,72 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
     //Esta funcion administra el sensor del acelerometro, al girar el celular a la izquierda o hacia la derecha se envia la orden de cerrar o abrir la pileta.
     func startAccelerometers()
     {
+        //Empiezo con un valor por defecto.
         var antiguoX = 0.5
+        //Si el acelerometro esta disponible.
         if motionManager.isAccelerometerAvailable
         {
+            //Cada 1.5 segundos voy a leer los datos del acelerometro.
             motionManager.accelerometerUpdateInterval = 1.5
             motionManager.startAccelerometerUpdates(to: OperationQueue.main)
             { (data, error) in
+                //Obtengo la medicion actual del acelerometro sobre el eje X.
                 let actualX = data!.acceleration.x
-                if(abs(actualX-antiguoX) > 0.75)
+                //Forma de detectar el shake mediante variaciones con respecto de la medicion actual a la medicion anterior.
+                if(abs(actualX-antiguoX) > 0.70)
                 {
                     if(antiguoX > actualX)
                     {
                         let estado = "2;ON";
                         let data: Data = estado.data(using: String.Encoding.utf8)!
-                        //self.esp32.writeValue(data, for: Array(characteristics)[0].value, type: CBCharacteristicWriteType.withResponse)
-                        self.cloroSelect.selectedSegmentIndex = 0
+                        self.esp32.writeValue(data, for: Array(self.characteristics)[0].value, type: CBCharacteristicWriteType.withResponse)
+                        self.cerrarSelect.selectedSegmentIndex = 0
                     }
                     else
                     {
                         let estado = "2;OFF";
                         let data: Data = estado.data(using: String.Encoding.utf8)!
-                        //self.esp32.writeValue(data, for: Array(characteristics)[0].value, type: CBCharacteristicWriteType.withResponse)
-                        self.cloroSelect.selectedSegmentIndex = 1
+                        self.esp32.writeValue(data, for: Array(self.characteristics)[0].value, type: CBCharacteristicWriteType.withResponse)
+                        self.cerrarSelect.selectedSegmentIndex = 1
                     }
                 }
+                //Por ultimo el valor actual, va a ser el valor anriguo para la proxima vez que vuelva entrar a la funcion.
                 antiguoX = actualX
             }
+        }
+    }
+    
+    // Adaptación de la pantalla al mostrar ú ocultar el teclado.
+    func setupHideKeyboardOnTap()
+    {
+        self.view.addGestureRecognizer(self.endEditingRecognizer())
+        self.navigationController?.navigationBar.addGestureRecognizer(self.endEditingRecognizer())
+    }
+    
+    // Adaptación de la pantalla al mostrar ú ocultar el teclado.
+    private func endEditingRecognizer() -> UIGestureRecognizer
+    {
+        let tap = UITapGestureRecognizer(target: self.view, action: #selector(self.view.endEditing(_:)))
+        tap.cancelsTouchesInView = false
+        return tap
+    }
+    // Adaptación de la pantalla al mostrar ú ocultar el teclado.
+    @objc func keyboardWillShow(notification: NSNotification)
+    {
+        if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue
+        {
+            if self.view.frame.origin.y == 0
+            {
+                self.view.frame.origin.y -= 0/*keyboardSize.height*/
+            }
+        }
+    }
+    // Adaptación de la pantalla al mostrar ú ocultar el teclado.
+    @objc func keyboardWillHide(notification: NSNotification)
+    {
+        if self.view.frame.origin.y != 0
+        {
+            self.view.frame.origin.y = 0
         }
     }
 

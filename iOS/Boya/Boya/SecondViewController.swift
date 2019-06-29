@@ -13,27 +13,38 @@ import Foundation
 
 class SecondViewController: UIViewController, CLLocationManagerDelegate {
 
+    //Elementos de la vista.
 	@IBOutlet var ssidText: UITextField!
 	@IBOutlet var passwordText: UITextField!
 	@IBOutlet var ubicacionText: UITextField!
     @IBOutlet var ubicacionSwitch: UISwitch!
+    @IBOutlet var horaSwitch: UISwitch!
     
     //Manager del sensorGPS.
     var locationManager = CLLocationManager()
     
+    //Variables tipo String que van a contener la latitud y longitud del sensor GPS.
     var latitude : String?
     var longitude : String?
 	
+    //Action del boton guardar.
 	@IBAction func guardarAction(_ sender: Any)
 	{
+        //Hora actual UNIX.
+        let timeInterval = NSDate().timeIntervalSince1970
+        //Hora actual UNIX en String para concatener.
+        let timeString = String(Int(timeInterval))
         //Si la ubicacion en base al sensorGPS esta activado.
         if(self.ubicacionSwitch.isOn)
         {
+            //Armo el mensaje para pasar al SE.
             var mensaje = "5;"+self.ssidText.text!+";"+self.passwordText.text!
             mensaje+=";"
             mensaje+=self.latitude!
             mensaje+=";"
             mensaje+=self.longitude!
+            mensaje+=";"
+            mensaje+=timeString
             let data: Data = mensaje.data(using: String.Encoding.utf8)!
             FirstViewController.esp32Shared.writeValue(data, for: Array(FirstViewController.characteristicsShared)[0].value, type: CBCharacteristicWriteType.withResponse)
         }
@@ -43,6 +54,8 @@ class SecondViewController: UIViewController, CLLocationManagerDelegate {
             var mensaje = "3;"+self.ssidText.text!+";"+self.passwordText.text!
             mensaje+=";"
             mensaje+=self.ubicacionText.text!
+            mensaje+=";"
+            mensaje+=timeString
             let data: Data = mensaje.data(using: String.Encoding.utf8)!
             FirstViewController.esp32Shared.writeValue(data, for: Array(FirstViewController.characteristicsShared)[0].value, type: CBCharacteristicWriteType.withResponse)
         }

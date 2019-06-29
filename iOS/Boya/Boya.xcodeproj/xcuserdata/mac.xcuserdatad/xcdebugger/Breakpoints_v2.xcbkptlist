@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Boya/SecondViewController.swift"
-            timestampString = "581744058.792257"
+            timestampString = "583541277.661526"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "20"
-            endingLineNumber = "20"
+            startingLineNumber = "22"
+            endingLineNumber = "22"
             landmarkName = "SecondViewController"
             landmarkType = "3">
          </BreakpointContent>
