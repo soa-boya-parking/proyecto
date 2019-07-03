@@ -84,7 +84,7 @@ class FirstViewController: UIViewController, CBCentralManagerDelegate, CBPeriphe
     @IBAction func cerrarPiletaAction(_ sender: Any)
     {
         var estado = "2;OFF";
-        if(cloroSelect.selectedSegmentIndex == 0)
+        if(cerrarSelect.selectedSegmentIndex == 0)
         {
             estado = "2;ON";
         }
