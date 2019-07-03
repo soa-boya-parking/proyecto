@@ -156,11 +156,21 @@ void getSensores()
     strcat(datosBluetooth, ";");
     
     if(valorSensorAgua > 4000)
+    {
       strcat(datosBluetooth, "Seco");
+      lluvia = 0; //Esta variable es leida por el thread aparte de los sensores que determina si cerrar o no el techo.
+    } 
     else if(valorSensorAgua > 2500)
+    {
       strcat(datosBluetooth, "Llovizna");
+      lluvia = 1;
+    }
     else
+    {
       strcat(datosBluetooth, "Lluvia");
+      lluvia = 1;
+    }
+      
     
     strcat(datosBluetooth, ";");
     
@@ -245,6 +255,8 @@ void Task2Core1(void* pvParameters)
       enviarDatosBluetooth();
       actualizarHora();
       cuandoDispensarCloro();
+      llueve();
+      obtenerClima();
       //enviarDatosWifi();
   }
 }

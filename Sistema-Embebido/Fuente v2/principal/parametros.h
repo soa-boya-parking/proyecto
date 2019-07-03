@@ -48,7 +48,10 @@ int horasActuales = 0;
 int segundosProgramadosDispensarCloro = 23;
 int minutosProgramadosDispensarCloro = 59;
 int horasProgramadosDispensarCloro = 59;
-int capacidadPileta = 0;
+int capacidadPileta = 0; // Capacidad de la pileta introducida por el usuario.
+int lluvia = 0; //Si el sensor de lluvia detecta lluvia, esta variable cambia a 1 y viceversa.
+int techocerrado = 0; //Si el techo ya fue cerrado no se vuelve a cerrar.
+int coordenadas = 0; //Si la ubicacion es en base a las coordenadas del celular esta variable cambia a 1.
 
 //Constantes para mensajes Bluetooth
 int const ORDEN_CLORO = 1;

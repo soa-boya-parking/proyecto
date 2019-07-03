@@ -16,7 +16,9 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
     //coordenadasATexto(datos[3], datos[4]); //Se pensaba utilizar una API para convertir las coordenadas a Texto entendible.
     horaenSegundos = atoi(datos[5]);
     relojActivado = 1;
-    obtenerClima();
+    strcpy(l6, datos[3]); //Si seteo las coordenadas muestro por la pantalla la ubicacion y no busco el clima, para que se vea la interaccion.
+    coordenadas = 1;
+    //obtenerClima();
   }
   else if (comando == ORDEN_WIFIGPS)
   {
@@ -24,6 +26,7 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
     delay(4000); // Es el tiempo que demora en conectarse a wifi, sin este delay entraria a la funcion obtener clima sin estar conectado a Wifi.
     horaenSegundos = atoi(datos[4]);
     relojActivado = 1;
+    coordenadas = 0;
     obtenerClima();
   }
   else if (comando == ORDEN_PROGRAMARCLORO)

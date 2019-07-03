@@ -64,7 +64,11 @@ int __secs_to_tm(long long t, int* horas, int* minutos, int* segundos)
     return -1;
 
   *horas = remsecs / 3600;
-  *horas-=3; // ARGENTINA.
+  // HUSO HORARIO ARGENTINA.
+  *horas-=3;
+  if(*horas==-3) *horas = 21;
+  else if(*horas == -2) *horas = 22;
+  else if(*horas == -1) *horas = 23;
   *minutos = remsecs / 60 % 60;
   *segundos = remsecs % 60;
 

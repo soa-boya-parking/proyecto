@@ -76,19 +76,36 @@ void stopMotor()
 //Sentido de rotacion del motor. Sentido de Cierre de Techo de Pileta.
 void backward()
 {
-  analogWrite(BIA, 0);
-  analogWrite(BIB, speed);
-  delay(5000); //ESTE DELAY ESTA CORRIENDO SOBRE EL THREAD2-NUCLEO2 QUE SIRVE DE ENTRADAS/SALIDAS NO SOBRE EL THREAD1-NUCLEO1 DE MEDICION DE SALIDAS.
-  stopMotor();
+  if(techocerrado == 0)
+  {
+    analogWrite(BIA, 0);
+    analogWrite(BIB, speed);
+    delay(5000); //ESTE DELAY ESTA CORRIENDO SOBRE EL THREAD2-NUCLEO2 QUE SIRVE DE ENTRADAS/SALIDAS NO SOBRE EL THREAD1-NUCLEO1 DE MEDICION DE SALIDAS.
+    stopMotor();
+    techocerrado = 1;
+  }
 }
 
 //Sentido de rotacion del motor. Sentido de Apertura de Techo de Pileta.
 void forward()
 {
-  analogWrite(BIA, speed);
-  analogWrite(BIB, 0);
-  delay(5000); //ESTE DELAY ESTA CORRIENDO SOBRE EL THREAD2-NUCLEO2 QUE SIRVE DE ENTRADAS/SALIDAS NO SOBRE EL THREAD1-NUCLEO1 DE MEDICION DE SALIDAS.
-  stopMotor();
+  if(techocerrado == 1)
+  {
+    analogWrite(BIA, speed);
+    analogWrite(BIB, 0);
+    delay(5000); //ESTE DELAY ESTA CORRIENDO SOBRE EL THREAD2-NUCLEO2 QUE SIRVE DE ENTRADAS/SALIDAS NO SOBRE EL THREAD1-NUCLEO1 DE MEDICION DE SALIDAS.
+    stopMotor();
+    techocerrado = 0;
+  }
+}
+
+//Esta funcion es llamada por el thread2 y comprueba si el sensor de lluvia detecta la presencia de lluvia, cierra el techo (motor).
+void llueve()
+{
+  if(lluvia == 1 && techocerrado == 0)
+    backward();
+  else if(lluvia == 0 && techocerrado == 1)
+    forward();
 }
 
 //Esta funcion corre sobre el thread 2 (nucleo 2) que se ejecuta cada 1 segundo y actualiza la hora siempre y cuando se haya seteado via bluetooth una hora inicial.
@@ -99,7 +116,7 @@ void actualizarHora()
   {
     horaenSegundos += 1;
     __secs_to_tm(horaenSegundos, &horasActuales, &minutosActuales, &segundosActuales);
-    char horas[3], minutos[3], segundos[3];
+    char horas[4], minutos[4], segundos[4];
     itoa(horasActuales, horas, 10); itoa(minutosActuales, minutos, 10); itoa(segundosActuales, segundos, 10);
     strcpy(l5, horas); strcat(l5, ":"); strcat(l5, minutos); strcat(l5, ":"); strcat(l5, segundos);
   }
@@ -136,6 +153,7 @@ void cuandoDispensarCloro()
 //Simula una llamada a una API del clima que devuelve en base a coordenadas, el nombre de la localizacion y si esta lloviendo o no.
 void obtenerClima()
 {
+  if (coordenadas == 1) return;
   if(WiFi.status()== WL_CONNECTED)
   {
     HTTPClient http;
@@ -153,7 +171,7 @@ void obtenerClima()
         strcpy(l6, datos[0]); // Exhibo la ubicacion por pantalla.
         strcat(l6, datos[1]); // Exhibo el clima por pantalla.
         if(strcmp(datos[1], "Lluvia") == 0) //Si la llamada a la API del clima detecta lluvia.
-          backward(); //Activo el servo para cerrar la pileta (techo).
+          lluvia = 1;
     }
     else 
     {
