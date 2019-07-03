@@ -104,8 +104,6 @@ void llueve()
 {
   if(lluvia == 1 && techocerrado == 0)
     backward();
-  else if(lluvia == 0 && techocerrado == 1)
-    forward();
 }
 
 //Esta funcion corre sobre el thread 2 (nucleo 2) que se ejecuta cada 1 segundo y actualiza la hora siempre y cuando se haya seteado via bluetooth una hora inicial.

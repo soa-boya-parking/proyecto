@@ -31,7 +31,6 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
   }
   else if (comando == ORDEN_PROGRAMARCLORO)
   {
-    Serial.print("PROGRAMACLORO");
     horasProgramadosDispensarCloro = atoi(datos[1]);
     minutosProgramadosDispensarCloro = atoi(datos[2]);
     segundosProgramadosDispensarCloro = atoi(datos[3]);
