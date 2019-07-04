@@ -92,6 +92,9 @@ const int COLORIMETRO_TOLERANCIA_COLOR_LUX_LIMPIA = 12500;
 const int COLORIMETRO_TOLERANCIA_COLOR_LUX_ALGOSUCIA = 12500;
 
 //Constantes / Macros para el dispensado de cloro.
+const int LIMITE_CONCURRENCIA = 3; //Si en 3 dias seguidos a la hora del dispensado de cloro la pileta estaba concurrida, ya no se podra seleccionar ese horario.
+int errorPorConcurrencia = 0; //Si esta variable esta en una, el usuario debe seleccionar otro horario para el dispensado de cloro.
+int concurrenciaPileta[24]= {0}; //Este vector guarda si para cada hora del dia, los anteriores dias estuvo muy concurrido a la hora de dispensar cloro.
 #define FRIA (temperatura > 0 && temperatura < 15)
 #define NORMAL (temperatura > 15 && temperatura < 20)
 #define CALIENTE (temperatura > 20)
@@ -127,6 +130,7 @@ const int PINRELE = 23;
 double temperatura;
 int x, y, z;
 uint16_t r, g, b, c, colorTemp, lux;
+int hayAlgoEnPileta = 0;
 char nombreColor[13];
 int valorSensorAgua;
 

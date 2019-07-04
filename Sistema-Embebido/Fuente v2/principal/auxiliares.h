@@ -125,25 +125,36 @@ void cuandoDispensarCloro()
 {
   //Por cada litro que tenga la pileta se anade un segundo de dispensado de cloro que equivale a 0,0016L
   int deltaPorCapacidad = capacidadPileta * 1000;
+  //Si estoy dentro del horario a dispensar.
   if(segundosProgramadosDispensarCloro == segundosActuales && minutosProgramadosDispensarCloro == minutosActuales && horasProgramadosDispensarCloro == horasActuales)
   {
-    if(FRIA)
+    //Si no hay nada en la pileta (humano, objeto, animal).
+    if(hayAlgoEnPileta == 0 && concurrenciaPileta[horasActuales] < LIMITE_CONCURRENCIA)
     {
-      digitalWrite(PINRELE, HIGH);
-      delay(UNSEGUNDO / 2 + deltaPorCapacidad);
-      digitalWrite(PINRELE, LOW);
+      if(FRIA)
+      {
+        digitalWrite(PINRELE, HIGH);
+        delay(UNSEGUNDO / 2 + deltaPorCapacidad);
+        digitalWrite(PINRELE, LOW);
+      }
+      else if (NORMAL)
+      {
+        digitalWrite(PINRELE, HIGH);
+        delay(UNSEGUNDO + deltaPorCapacidad);
+        digitalWrite(PINRELE, LOW);
+      }
+      else if (CALIENTE)
+      {
+        digitalWrite(PINRELE, HIGH);
+        delay(UNSEGUNDO * 1.5 + deltaPorCapacidad);
+        digitalWrite(PINRELE, LOW);
+      }
     }
-    else if (NORMAL)
+    //Si hay algo en la pileta, registro que en ese horario (hora solamente) hubo una concurrencia.
+    else
     {
-      digitalWrite(PINRELE, HIGH);
-      delay(UNSEGUNDO + deltaPorCapacidad);
-      digitalWrite(PINRELE, LOW);
-    }
-    else if (CALIENTE)
-    {
-      digitalWrite(PINRELE, HIGH);
-      delay(UNSEGUNDO * 1.5 + deltaPorCapacidad);
-      digitalWrite(PINRELE, LOW);
+      concurrenciaPileta[horasActuales] +=1;
+      horasProgramadosDispensarCloro = (horasProgramadosDispensarCloro + 1) % 24;
     }
   }
 }

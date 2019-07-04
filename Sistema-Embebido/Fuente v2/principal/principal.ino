@@ -120,7 +120,7 @@ void getSensores()
     else
       strcpy(l4, "Lluvia");
 
-    //BLUETOOTH PREPARACION
+    //BLUETOOTH PREPARACION + LOGICA INDEPENDIENTE
 
     //Preparacion de los datos por Bluetooth. (NO ENVIO)
     strcpy(datosBluetooth, tempchar);
@@ -153,9 +153,27 @@ void getSensores()
     
     strcat(datosBluetooth, ";");
     
-    (abs(x+y+z) - abs(xyz) > SENSIBILIDAD_ACELEROMETRO) ? strcat(datosBluetooth, "ALERTA") : strcat(datosBluetooth, "NADA");
+    if(abs(x+y+z) - abs(xyz) > SENSIBILIDAD_ACELEROMETRO)
+    {
+      strcat(datosBluetooth, "ALERTA");
+      hayAlgoEnPileta = 1;
+    }
+    else
+    {
+      strcat(datosBluetooth, "NADA");
+      hayAlgoEnPileta = 0;
+    }
     strcat(datosBluetooth, ";");
     strcat(datosBluetooth, nombreColor);
+    strcat(datosBluetooth, ";");
+    //Si el horario seleccionado por el usuario es muy concurrido en base a dias pasados para dispensar cloro.
+    if(errorPorConcurrencia == 1)
+    {
+      strcat(datosBluetooth, "NOK");
+      errorPorConcurrencia = 0;
+    }
+    else
+      strcat(datosBluetooth, "OK");
     strcat(datosBluetooth, ";");
     xyz = x+y+z;
 }
