@@ -11,8 +11,9 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
     (strcmp(datos[1], "ON") == 0) ? backward() : forward();
   } else if (comando == ORDEN_WIFIGPSCOORD)
   {
-    WiFi.begin(datos[1], datos[2]);
-    delay(4000); // Es el tiempo que demora en conectarse a wifi, sin este delay entraria a la funcion obtener clima sin estar conectado a Wifi.
+    strcpy(ssid, datos[1]); strcpy(password, datos[2]);
+    WiFi.begin(ssid, password);
+    delay(WIFI_DELAY); // Es el tiempo que demora en conectarse a wifi, sin este delay entraria a la funcion obtener clima sin estar conectado a Wifi.
     //coordenadasATexto(datos[3], datos[4]); //Se pensaba utilizar una API para convertir las coordenadas a Texto entendible.
     horaenSegundos = atoi(datos[5]);
     relojActivado = 1;
@@ -22,8 +23,9 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
   }
   else if (comando == ORDEN_WIFIGPS)
   {
-    WiFi.begin(datos[1], datos[2]);
-    delay(4000); // Es el tiempo que demora en conectarse a wifi, sin este delay entraria a la funcion obtener clima sin estar conectado a Wifi.
+    strcpy(ssid, datos[1]); strcpy(password, datos[2]);
+    WiFi.begin(ssid, password);
+    delay(WIFI_DELAY); // Es el tiempo que demora en conectarse a wifi, sin este delay entraria a la funcion obtener clima sin estar conectado a Wifi.
     horaenSegundos = atoi(datos[4]);
     relojActivado = 1;
     coordenadas = 0;

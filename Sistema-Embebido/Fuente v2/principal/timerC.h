@@ -1,4 +1,4 @@
-//FUNCION https://github.com/rofl0r/musl/blob/master/src/time/__secs_to_tm.c
+//https://github.com/rofl0r/musl/blob/master/src/time/__secs_to_tm.c
 #include <stdio.h>
 #include <time.h>
 

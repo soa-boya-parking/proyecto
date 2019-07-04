@@ -127,22 +127,22 @@ void cuandoDispensarCloro()
   int deltaPorCapacidad = capacidadPileta * 1000;
   if(segundosProgramadosDispensarCloro == segundosActuales && minutosProgramadosDispensarCloro == minutosActuales && horasProgramadosDispensarCloro == horasActuales)
   {
-    if(temperatura > 0 && temperatura < 15)
+    if(FRIA)
     {
       digitalWrite(PINRELE, HIGH);
-      delay(500 + deltaPorCapacidad);
+      delay(UNSEGUNDO / 2 + deltaPorCapacidad);
       digitalWrite(PINRELE, LOW);
     }
-    else if (temperatura > 15 && temperatura < 20)
+    else if (NORMAL)
     {
       digitalWrite(PINRELE, HIGH);
-      delay(1000 + deltaPorCapacidad);
+      delay(UNSEGUNDO + deltaPorCapacidad);
       digitalWrite(PINRELE, LOW);
     }
-    else if (temperatura > 20)
+    else if (CALIENTE)
     {
       digitalWrite(PINRELE, HIGH);
-      delay(1500 + deltaPorCapacidad);
+      delay(UNSEGUNDO * 1.5 + deltaPorCapacidad);
       digitalWrite(PINRELE, LOW);
     }
   }
@@ -155,9 +155,8 @@ void obtenerClima()
   if(WiFi.status()== WL_CONNECTED)
   {
     HTTPClient http;
-    char base[] = "http://191.238.213.18/obtenerClima.php?password=asd1234";
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    http.begin(base); 
+    http.begin(WIFI_API_CLIMA); 
     int httpResponseCode = http.GET();
     if (httpResponseCode > 0) 
     {
