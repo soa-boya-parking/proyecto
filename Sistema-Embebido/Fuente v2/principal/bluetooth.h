@@ -17,7 +17,10 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
     //coordenadasATexto(datos[3], datos[4]); //Se pensaba utilizar una API para convertir las coordenadas a Texto entendible.
     horaenSegundos = atoi(datos[5]);
     relojActivado = 1;
-    strcpy(l6, datos[3]); //Si seteo las coordenadas muestro por la pantalla la ubicacion y no busco el clima, para que se vea la interaccion.
+    datos[3][15] = '\0'; //Limite de la pantalla.
+    datos[4][15] = '\0'; //Limite de la pantalla.
+    strcpy(l5, datos[3]); //Si seteo las coordenadas muestro por la pantalla la ubicacion y no busco el clima, para que se vea la interaccion.
+    strcpy(l6, datos[4]);
     coordenadas = 1;
     //obtenerClima();
   }
@@ -34,8 +37,9 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
   else if (comando == ORDEN_PROGRAMARCLORO)
   {
     int horasRecibidas = atoi(datos[1]);
+    Serial.println(concurrenciaPileta[horasRecibidas]);
     //Si la concurrencia de la pileta en los dias pasados fue muy alta el usuario debe seleccionar otro horario.
-    if(concurrenciaPileta[horasRecibidas] > 3)
+    if(concurrenciaPileta[horasRecibidas] > LIMITE_CONCURRENCIA)
       errorPorConcurrencia = 1;
     horasProgramadosDispensarCloro = atoi(datos[1]);
     minutosProgramadosDispensarCloro = atoi(datos[2]);

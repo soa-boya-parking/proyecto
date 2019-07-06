@@ -116,7 +116,7 @@ void actualizarHora()
     __secs_to_tm(horaenSegundos, &horasActuales, &minutosActuales, &segundosActuales);
     char horas[4], minutos[4], segundos[4];
     itoa(horasActuales, horas, 10); itoa(minutosActuales, minutos, 10); itoa(segundosActuales, segundos, 10);
-    strcpy(l5, horas); strcat(l5, ":"); strcat(l5, minutos); strcat(l5, ":"); strcat(l5, segundos);
+    strcpy(l4, horas); strcat(l4, ":"); strcat(l4, minutos); strcat(l4, ":"); strcat(l4, segundos);
   }
 }
 
@@ -176,8 +176,8 @@ void obtenerClima()
         char aux[100]; // Esta variable auxiliar es porque el request trabaja con un String C++ y el metodo separarPorPuntoYComa con un char*
         payload.toCharArray(aux, 99);
         separarPorPuntoYComa(datos, aux);
-        strcpy(l6, datos[0]); // Exhibo la ubicacion por pantalla.
-        strcat(l6, datos[1]); // Exhibo el clima por pantalla.
+        strcpy(l5, datos[0]); // Exhibo la ubicacion por pantalla.
+        strcat(l5, datos[1]); // Exhibo el clima por pantalla.
         if(strcmp(datos[1], "Lluvia") == 0) //Si la llamada a la API del clima detecta lluvia.
           lluvia = 1;
     }

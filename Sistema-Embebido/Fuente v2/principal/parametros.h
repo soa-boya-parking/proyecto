@@ -136,7 +136,7 @@ int valorSensorAgua;
 
 //Constructor del acelerometro.
 ADXL345 adxl = ADXL345();
-const int SENSIBILIDAD_ACELEROMETRO = 10;
+const int SENSIBILIDAD_ACELEROMETRO = 5;
 
 //Tareas, concepto similar a Thread, el ESP32 tiene 2 nucleos, por lo tanto puedo tener threads en mas de un nucleo.
 TaskHandle_t Task1;

@@ -66,7 +66,7 @@ void setup()
   xTaskCreatePinnedToCore(Task2Core1, "Task2", STACK_SIZE_5000, NULL, 1, &Task2, X_CORE_ID_1);  
 
   //La primera linea de la pantalla es el nombre del proyecto.
-  strcpy(l1, "Boya-Parking");
+  //strcpy(l1, "Boya-Parking");
   //Delay de cinco segundos para mostra los mensajes de inicializacion.
   delay(5000);
 }
@@ -83,7 +83,7 @@ void getSensores()
     dtostrf(temperatura, 6, 2, tempchar);
     strcat(tempmsg, tempchar);
     strcat(tempmsg, " °C");
-    strcpy(l2, tempmsg);
+    strcpy(l1, tempmsg);
     
     //ACELEROMETRO
     
@@ -101,11 +101,11 @@ void getSensores()
     //Se calcula la suciedad mediante pruebas caseras realizadas, teniendo en cuenta el colorTemp y lux.
     int suciedad = corroborarSuciedad(colorTemp, lux);
     if(suciedad == COLORIMETRO_ESTADO_AGUA_LIMPIA)
-      strcpy(l3, "Estado: Limpia");
+      strcpy(l2, "Estado: Limpia");
     else if(suciedad == COLORIMETRO_ESTADO_AGUA_ALGOSUCIA)
-      strcpy(l3, "Estado: Normal"); //No alcanzan los caracteres en la pantalla para algo sucia
+      strcpy(l2, "Estado: Normal"); //No alcanzan los caracteres en la pantalla para algo sucia
     else if(suciedad == COLORIMETRO_ESTADO_AGUA_SUCIA)
-      strcpy(l3, "Estado: Sucia");  
+      strcpy(l2, "Estado: Sucia");  
     adaptacionColor(r, g, b, c);
 
     //SENSOR AGUA
@@ -114,11 +114,11 @@ void getSensores()
     valorSensorAgua = analogRead(PINAGUA);
     char agua[11] = "Agua: "; char a6[7];
     if(valorSensorAgua > SENSOR_LLUVIA_TOLERANCIA_SECO_LLOVIZNA)
-      strcpy(l4, "Seco");
+      strcpy(l3, "Seco");
     else if(valorSensorAgua > SENSOR_LLUVIA_TOLERANCIA_LLOVIZNA_LLUVIA)
-      strcpy(l4, "Llovizna");
+      strcpy(l3, "Llovizna");
     else
-      strcpy(l4, "Lluvia");
+      strcpy(l3, "Lluvia");
 
     //BLUETOOTH PREPARACION + LOGICA INDEPENDIENTE
 
