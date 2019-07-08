@@ -1,12 +1,12 @@
 #include "timerC.h"
 
-//Si queda tiempo ver esta opcion.
+//Sin uso, pero se deja para visualizar como se haria una llamada a una API de Geolocalizacion inversa (Coordenadas -> Texto)
 void coordenadasATexto(const char* lat, const char* longg)
 {
   if(WiFi.status()== WL_CONNECTED)
   {
     HTTPClient http;
-    char base[] = "https://api.opencagedata.com/geocode/v1/json?key=6b6a6897b5ad4a56a6d47f16d4908577&q=";
+    char base[500] = "https://api.opencagedata.com/geocode/v1/json?key=6b6a6897b5ad4a56a6d47f16d4908577&q=";
     strcat(base, lat);
     strcat(base, "+");
     strcat(base, longg);
@@ -49,7 +49,6 @@ void separarPorPuntoYComa(char datos[][30], const char* msg)
 //Funcion para enviar un mensaje a la pantalla.
 void mostrar(int x, int y, char* msg)
 {
-  //lcd.clear();
   lcd.setCursor(x,y);
   lcd.print(msg);
 }
@@ -156,6 +155,17 @@ void cuandoDispensarCloro()
       concurrenciaPileta[horasActuales] +=1;
       horasProgramadosDispensarCloro = (horasProgramadosDispensarCloro + 1) % 24;
     }
+  }
+}
+
+//Esta funcion "hace" sonar al buzzer en caso de detectar un movimiento inusual desde el acelerometro.
+void cuandoSonar()
+{
+  if(hayAlgoEnPileta == 1)
+  {
+    digitalWrite(PINBUZZER, HIGH);
+    delay(UNSEGUNDO);
+    digitalWrite(PINBUZZER, LOW);
   }
 }
 

@@ -34,6 +34,9 @@ const int BIA = 0;
 const int BIB = 4;
 byte speed = 255;
 
+//Buzzer
+const int PINBUZZER = 17;
+
 //C
 #include "stdlib.h"
 #include "string.h"

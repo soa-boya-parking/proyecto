@@ -17,12 +17,11 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
     //coordenadasATexto(datos[3], datos[4]); //Se pensaba utilizar una API para convertir las coordenadas a Texto entendible.
     horaenSegundos = atoi(datos[5]);
     relojActivado = 1;
-    datos[3][15] = '\0'; //Limite de la pantalla.
-    datos[4][15] = '\0'; //Limite de la pantalla.
+    datos[3][14] = '\0'; //Limite de la pantalla.
+    datos[4][14] = '\0'; //Limite de la pantalla.
     strcpy(l5, datos[3]); //Si seteo las coordenadas muestro por la pantalla la ubicacion y no busco el clima, para que se vea la interaccion.
     strcpy(l6, datos[4]);
     coordenadas = 1;
-    //obtenerClima();
   }
   else if (comando == ORDEN_WIFIGPS)
   {

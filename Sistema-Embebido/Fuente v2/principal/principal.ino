@@ -204,6 +204,7 @@ void Task2Core1(void* pvParameters)
       enviarDatosBluetooth();
       actualizarHora();
       cuandoDispensarCloro();
+      cuandoSonar();
       llueve();
       obtenerClima();
   }
