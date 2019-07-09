@@ -26,6 +26,9 @@ void setup()
   adxl.setRangeSetting(16);
   mostrar(0, 2, "ADXL345 ON");
 
+  //-------INICIALIZACION DEL BUZZER.
+  pinMode(17, OUTPUT);
+
   //-------INICIALIZACION DE LOS PINES DEL PUENTE H(MOTOR).
   pinMode(BIA, OUTPUT);
   pinMode(BIB, OUTPUT);
