@@ -184,12 +184,8 @@ void getSensores()
 //Thread1-Core1
 void Task1Core1(void* pvParameters)
 {
-  TickType_t momentoDoInicio;
-  momentoDoInicio = xTaskGetTickCount();
   for(;;)
   {
-    //1 TICK = 1 CICLO. Pasa de 1 milisegundo expresado a ciclos, ya que la funcion recibe la cantidad de ciclos por la cual permanece bloqueado.
-    vTaskDelayUntil(&momentoDoInicio,pdMS_TO_TICKS(1));
     getSensores();
   }
       
