@@ -36,13 +36,13 @@ void tratarMensajeRecibidoBluetooth(const char* msg)
   else if (comando == ORDEN_PROGRAMARCLORO)
   {
     int horasRecibidas = atoi(datos[1]);
-    Serial.println(concurrenciaPileta[horasRecibidas]);
     //Si la concurrencia de la pileta en los dias pasados fue muy alta el usuario debe seleccionar otro horario.
     if(concurrenciaPileta[horasRecibidas] > LIMITE_CONCURRENCIA)
       errorPorConcurrencia = 1;
     horasProgramadosDispensarCloro = atoi(datos[1]);
     minutosProgramadosDispensarCloro = atoi(datos[2]);
     segundosProgramadosDispensarCloro = atoi(datos[3]);
+    capacidadPileta = atoi(datos[4]);
   }
   
 }

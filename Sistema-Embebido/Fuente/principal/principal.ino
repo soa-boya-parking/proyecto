@@ -27,7 +27,7 @@ void setup()
   mostrar(0, 2, "ADXL345 ON");
 
   //-------INICIALIZACION DEL BUZZER.
-  pinMode(17, OUTPUT);
+  pinMode(PINBUZZER, OUTPUT);
 
   //-------INICIALIZACION DE LOS PINES DEL PUENTE H(MOTOR).
   pinMode(BIA, OUTPUT);
